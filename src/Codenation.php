@@ -15,7 +15,11 @@ class Codenation
 
     public function sendAnswer()
     {
-        if (file_exists('answer.json')) {
+        try {
+            if (!file_exists('answer.json')) {
+                throw new \Error('Não foi possível encontrar o arquivo!');
+            }
+
             $postfields = array();
 
             if (function_exists('curl_file_create')) {
@@ -35,21 +39,21 @@ class Codenation
 
             $response = curl_exec($ch);
 
-            print_r($response);
-            print_r(1);
-            if (!curl_errno($ch)) {
-                $info = curl_getinfo($ch);
-                if ($info['http_code'] == 200) {
-                    print_r($info);
-                    print_r(2);
-                }
-            } else {
-                $error_message = curl_error($ch);
-
-                print_r($error_message);
-                print_r(3);
+            if (curl_errno($ch)) {
+                throw new \Error(curl_error($ch));
             }
+
             curl_close($ch);
+
+            return [
+                'success' => true,
+                'data' => $response
+            ];
+        } catch (\Throwable $exception) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage()
+            ];
         }
     }
 
